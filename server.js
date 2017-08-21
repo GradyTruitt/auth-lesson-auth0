@@ -13,8 +13,8 @@ app.use(bodyParser.json());
 app.use(session({
   resave: true, //Without this you get a constant warning about default values
   saveUninitialized: true, //Without this you get a constant warning about default values
-  secret: 'keyboardcat'
-}))
+  secret: config.secret
+}));
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -25,7 +25,7 @@ app.use(express.static('./public'));
 /////////////
 // DATABASE //
 /////////////
-const massiveInstance = massive.connectSync({connectionString: 'postgres://localhost/sandbox'})
+const massiveInstance = massive.connectSync({connectionString: config.connectionString});
 
 app.set('db', massiveInstance);
 const db = app.get('db');
@@ -50,14 +50,14 @@ passport.use(new Auth0Strategy({
       if (!user) { //if there isn't one, we'll create one!
         console.log('CREATING USER');
         db.createUserByAuth([profile.displayName, profile.id], function(err, user) {
-          console.log('USER CREATED', userA);
+          console.log('USER CREATED', user);
           return done(err, user[0]); // GOES TO SERIALIZE USER
         })
       } else { //when we find the user, return it
         console.log('FOUND USER', user);
         return done(err, user);
       }
-    })
+    });
   }
 ));
 
@@ -72,7 +72,7 @@ passport.serializeUser(function(userA, done) {
 
 //USER COMES FROM SESSION - THIS IS INVOKED FOR EVERY ENDPOINT
 passport.deserializeUser(function(userB, done) {
-  var userC = userC;
+  var userC = userB;
   //Things you might do here :
     // Query the database with the user id, get other information to put on req.user
   done(null, userC); //PUTS 'USER' ON REQ.USER
@@ -109,4 +109,4 @@ app.get('/auth/logout', function(req, res) {
 
 app.listen(3000, function() {
   console.log('Connected on 3000')
-})
+});
